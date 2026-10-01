@@ -1,47 +1,27 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 /* eslint-disable jsx-a11y/label-has-associated-control */
 
-import React, { FormEvent, useState } from 'react';
+import React from 'react';
 import cn from 'classnames';
 import { Todo } from '../types/Todo';
-import { useTodos } from '../context/TodosContext';
+import { useTodoItem } from '../hooks/useTodoItem';
 
 type Props = {
   todo: Todo;
 };
 
 export const TodoItem: React.FC<Props> = ({ todo }) => {
-  const { deleteTodo, toggleTodo, updateTodo } = useTodos();
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [newTitle, setNewTitle] = useState(todo.title);
-
-  const saveChanges = () => {
-    updateTodo(todo.id, newTitle);
-    setIsEditing(false);
-  };
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    saveChanges();
-  };
-
-  const handleCancel = () => {
-    setNewTitle(todo.title);
-    setIsEditing(false);
-  };
-
-  const handleDelete = () => {
-    deleteTodo(todo.id);
-
-    requestAnimationFrame(() => {
-      const newTodoField = document.querySelector<HTMLInputElement>(
-        '[data-cy="NewTodoField"]',
-      );
-
-      newTodoField?.focus();
-    });
-  };
+  const {
+    isEditing,
+    newTitle,
+    saveChanges,
+    handleSubmit,
+    handleKeyUp,
+    handleDelete,
+    startEditing,
+    handleTitleChange,
+    handleToggle,
+  } = useTodoItem(todo);
 
   return (
     <div
@@ -56,7 +36,7 @@ export const TodoItem: React.FC<Props> = ({ todo }) => {
           type="checkbox"
           className="todo__status"
           checked={todo.completed}
-          onChange={() => toggleTodo(todo.id)}
+          onChange={handleToggle}
         />
       </label>
 
@@ -69,13 +49,9 @@ export const TodoItem: React.FC<Props> = ({ todo }) => {
             placeholder="Empty todo will be deleted"
             value={newTitle}
             autoFocus
-            onChange={event => setNewTitle(event.target.value)}
+            onChange={event => handleTitleChange(event.target.value)}
             onBlur={saveChanges}
-            onKeyUp={event => {
-              if (event.key === 'Escape') {
-                handleCancel();
-              }
-            }}
+            onKeyUp={handleKeyUp}
           />
         </form>
       ) : (
@@ -83,10 +59,7 @@ export const TodoItem: React.FC<Props> = ({ todo }) => {
           <span
             data-cy="TodoTitle"
             className="todo__title"
-            onDoubleClick={() => {
-              setNewTitle(todo.title);
-              setIsEditing(true);
-            }}
+            onDoubleClick={startEditing}
           >
             {todo.title}
           </span>

@@ -1,22 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Todo } from '../types/Todo';
+import { v4 as uuidv4 } from 'uuid';
 
 type TodosContextType = {
   todos: Todo[];
   addTodo: (title: string) => void;
-  deleteTodo: (todoId: number) => void;
-  toggleTodo: (todoId: number) => void;
+  deleteTodo: (todoId: string) => void;
+  toggleTodo: (todoId: string) => void;
   toggleAll: () => void;
   clearCompleted: () => void;
-  updateTodo: (todoId: number, title: string) => void;
+  updateTodo: (todoId: string, title: string) => void;
 };
 
 const TodosContext = createContext<TodosContextType | undefined>(undefined);
 
 const getInitialTodos = (): Todo[] => {
-  const savedTodos = localStorage.getItem('todos');
+  try {
+    const savedTodos = localStorage.getItem('todos');
 
-  return savedTodos ? JSON.parse(savedTodos) : [];
+    return savedTodos ? JSON.parse(savedTodos) : [];
+  } catch {
+    return [];
+  }
 };
 
 export const TodosProvider = ({ children }: { children: React.ReactNode }) => {
@@ -34,7 +39,7 @@ export const TodosProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const newTodo: Todo = {
-      id: +new Date(),
+      id: uuidv4(),
       title: trimmedTitle,
       completed: false,
     };
@@ -42,11 +47,11 @@ export const TodosProvider = ({ children }: { children: React.ReactNode }) => {
     setTodos(currentTodos => [...currentTodos, newTodo]);
   };
 
-  const deleteTodo = (todoId: number) => {
+  const deleteTodo = (todoId: string) => {
     setTodos(currentTodos => currentTodos.filter(todo => todo.id !== todoId));
   };
 
-  const toggleTodo = (todoId: number) => {
+  const toggleTodo = (todoId: string) => {
     setTodos(currentTodos =>
       currentTodos.map(todo =>
         todo.id === todoId ? { ...todo, completed: !todo.completed } : todo,
@@ -69,7 +74,7 @@ export const TodosProvider = ({ children }: { children: React.ReactNode }) => {
     setTodos(currentTodos => currentTodos.filter(todo => !todo.completed));
   };
 
-  const updateTodo = (todoId: number, title: string) => {
+  const updateTodo = (todoId: string, title: string) => {
     const trimmedTitle = title.trim();
 
     if (!trimmedTitle) {
